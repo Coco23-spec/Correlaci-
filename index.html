@@ -284,72 +284,83 @@
         }
 
         function updateCalculations() {
-            const stats = calculateStatistics();
-            const { n, sumX, sumY, sumXY, sumX2, sumY2, meanX, meanY, numerator, denomX, denomY, denominator, r, a, b } = stats;
+            try {
+                const stats = calculateStatistics();
+                const { n, sumX, sumY, sumXY, sumX2, sumY2, meanX, meanY, numerator, denomX, denomY, denominator, r, a, b } = stats;
 
-            // Mostrar cálculos
-            document.getElementById('calculations').innerHTML = `
-                <div class="formula">
-                    <strong>Sumas necesarias:</strong><br>
-                    n = ${n}<br>
-                    Σx = ${sumX}<br>
-                    Σy = ${sumY}<br>
-                    Σxy = ${sumXY}<br>
-                    Σx² = ${sumX2}<br>
-                    Σy² = ${sumY2}<br>
-                    x̄ = ${meanX.toFixed(4)}<br>
-                    ȳ = ${meanY.toFixed(4)}
-                </div>
-                <div class="formula">
-                    <strong>Fórmula del coeficiente de correlación:</strong><br>
-                    r = [n·Σxy - Σx·Σy] / √[(n·Σx² - (Σx)²)(n·Σy² - (Σy)²)]<br>
-                    r = [${n}×${sumXY} - ${sumX}×${sumY}] / √[(${n}×${sumX2} - ${sumX}²)(${n}×${sumY2} - ${sumY}²)]<br>
-                    r = [${numerator}] / √[${denomX} × ${denomY}]<br>
-                    r = ${numerator} / ${denominator.toFixed(2)} = <span class="highlight">${r.toFixed(4)}</span>
-                </div>
-            `;
+                // Verificar que tenemos datos válidos
+                if (n === 0 || isNaN(r)) {
+                    document.getElementById('calculations').innerHTML = '<div class="formula">Error: Verifica que todos los campos tengan valores numéricos válidos.</div>';
+                    return;
+                }
 
-            // Determinar grado de relación
-            let strengthText = "";
-            if (Math.abs(r) >= 0.9) strengthText = "Muy fuerte";
-            else if (Math.abs(r) >= 0.7) strengthText = "Fuerte";
-            else if (Math.abs(r) >= 0.5) strengthText = "Moderada";
-            else if (Math.abs(r) >= 0.3) strengthText = "Débil";
-            else strengthText = "Muy débil";
+                // Mostrar cálculos
+                document.getElementById('calculations').innerHTML = `
+                    <div class="formula">
+                        <strong>Sumas necesarias:</strong><br>
+                        n = ${n}<br>
+                        Σx = ${sumX.toFixed(2)}<br>
+                        Σy = ${sumY.toFixed(2)}<br>
+                        Σxy = ${sumXY.toFixed(2)}<br>
+                        Σx² = ${sumX2.toFixed(2)}<br>
+                        Σy² = ${sumY2.toFixed(2)}<br>
+                        x̄ = ${meanX.toFixed(4)}<br>
+                        ȳ = ${meanY.toFixed(4)}
+                    </div>
+                    <div class="formula">
+                        <strong>Fórmula del coeficiente de correlación:</strong><br>
+                        r = [n·Σxy - Σx·Σy] / √[(n·Σx² - (Σx)²)(n·Σy² - (Σy)²)]<br>
+                        r = [${n}×${sumXY.toFixed(2)} - ${sumX.toFixed(2)}×${sumY.toFixed(2)}] / √[(${n}×${sumX2.toFixed(2)} - ${sumX.toFixed(2)}²)(${n}×${sumY2.toFixed(2)} - ${sumY.toFixed(2)}²)]<br>
+                        r = [${numerator.toFixed(2)}] / √[${denomX.toFixed(2)} × ${denomY.toFixed(2)}]<br>
+                        r = ${numerator.toFixed(2)} / ${denominator.toFixed(2)} = <span class="highlight">${r.toFixed(4)}</span>
+                    </div>
+                `;
 
-            document.getElementById('correlation-strength').innerHTML = `<span class="highlight">${strengthText}</span> (|r| = ${Math.abs(r).toFixed(4)})`;
-            
-            document.getElementById('correlation-coefficient').innerHTML = `<span class="highlight">r = ${r.toFixed(4)}</span>`;
-            
-            const direction = r > 0 ? 'positiva' : r < 0 ? 'negativa' : 'nula';
-            const trend = r > 0 ? 'a mayor valor de x, tiende a haber mayor valor de y' : r < 0 ? 'a mayor valor de x, tiende a haber menor valor de y' : 'no hay tendencia lineal clara';
-            
-            document.getElementById('correlation-interpretation').innerHTML = `
-                Existe una correlación <span class="highlight">${direction} ${strengthText.toLowerCase()}</span> entre las variables.
-                Esto significa que ${trend}.
-            `;
-            
-            document.getElementById('regression-equation').innerHTML = `
-                <div class="formula">
-                    <strong>Cálculo de coeficientes:</strong><br>
-                    b = [n·Σxy - Σx·Σy] / [n·Σx² - (Σx)²]<br>
-                    b = [${n}×${sumXY} - ${sumX}×${sumY}] / [${n}×${sumX2} - ${sumX}²]<br>
-                    b = ${numerator} / ${denomX} = <span class="highlight">${b.toFixed(4)}</span><br><br>
-                    a = ȳ - b·x̄<br>
-                    a = ${meanY.toFixed(4)} - ${b.toFixed(4)}×${meanX.toFixed(4)} = <span class="highlight">${a.toFixed(4)}</span>
-                </div>
-                <strong>Ecuación de regresión:</strong><br>
-                <span class="highlight">y = ${a.toFixed(4)} + ${b.toFixed(4)}x</span>
-            `;
-            
-            document.getElementById('linear-values').innerHTML = `
-                En la ecuación lineal y = a + bx:<br>
-                • <span class="highlight">a = ${a.toFixed(4)}</span> (intercepto)<br>
-                • <span class="highlight">b = ${b.toFixed(4)}</span> (pendiente)
-            `;
+                // Determinar grado de relación
+                let strengthText = "";
+                if (Math.abs(r) >= 0.9) strengthText = "Muy fuerte";
+                else if (Math.abs(r) >= 0.7) strengthText = "Fuerte";
+                else if (Math.abs(r) >= 0.5) strengthText = "Moderada";
+                else if (Math.abs(r) >= 0.3) strengthText = "Débil";
+                else strengthText = "Muy débil";
 
-            updateChart();
-            updatePrediction();
+                document.getElementById('correlation-strength').innerHTML = `<span class="highlight">${strengthText}</span> (|r| = ${Math.abs(r).toFixed(4)})`;
+                
+                document.getElementById('correlation-coefficient').innerHTML = `<span class="highlight">r = ${r.toFixed(4)}</span>`;
+                
+                const direction = r > 0 ? 'positiva' : r < 0 ? 'negativa' : 'nula';
+                const trend = r > 0 ? 'a mayor valor de x, tiende a haber mayor valor de y' : r < 0 ? 'a mayor valor de x, tiende a haber menor valor de y' : 'no hay tendencia lineal clara';
+                
+                document.getElementById('correlation-interpretation').innerHTML = `
+                    Existe una correlación <span class="highlight">${direction} ${strengthText.toLowerCase()}</span> entre las variables.
+                    Esto significa que ${trend}.
+                `;
+                
+                document.getElementById('regression-equation').innerHTML = `
+                    <div class="formula">
+                        <strong>Cálculo de coeficientes:</strong><br>
+                        b = [n·Σxy - Σx·Σy] / [n·Σx² - (Σx)²]<br>
+                        b = [${n}×${sumXY.toFixed(2)} - ${sumX.toFixed(2)}×${sumY.toFixed(2)}] / [${n}×${sumX2.toFixed(2)} - ${sumX.toFixed(2)}²]<br>
+                        b = ${numerator.toFixed(2)} / ${denomX.toFixed(2)} = <span class="highlight">${b.toFixed(4)}</span><br><br>
+                        a = ȳ - b·x̄<br>
+                        a = ${meanY.toFixed(4)} - ${b.toFixed(4)}×${meanX.toFixed(4)} = <span class="highlight">${a.toFixed(4)}</span>
+                    </div>
+                    <strong>Ecuación de regresión:</strong><br>
+                    <span class="highlight">y = ${a.toFixed(4)} + ${b.toFixed(4)}x</span>
+                `;
+                
+                document.getElementById('linear-values').innerHTML = `
+                    En la ecuación lineal y = a + bx:<br>
+                    • <span class="highlight">a = ${a.toFixed(4)}</span> (intercepto)<br>
+                    • <span class="highlight">b = ${b.toFixed(4)}</span> (pendiente)
+                `;
+
+                updateChart();
+                updatePrediction();
+            } catch (error) {
+                console.error('Error en updateCalculations:', error);
+                document.getElementById('calculations').innerHTML = '<div class="formula">Error en los cálculos. Verifica los datos ingresados.</div>';
+            }
         }
 
         function updatePrediction() {
@@ -505,6 +516,14 @@
         }
 
         // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Pequeño delay para asegurar que todo esté cargado
+            setTimeout(function() {
+                updateCalculations();
+            }, 100);
+        });
+
+        // También inicializar cuando la ventana se cargue completamente
         window.onload = function() {
             updateCalculations();
         };
