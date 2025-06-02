@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Correlación y Regresión</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .editable-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .editable-table th {
+            padding: 12px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+            border: 1px solid #dee2e6;
+        }
+        .editable-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        .editable-input {
+            width: 60px;
+            padding: 8px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .editable-input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .chart-container {
+            margin: 30px 0;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .results {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .result-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        .calculation-steps {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #2196f3;
+        }
+        .formula {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            border-left: 4px solid #ff9800;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .prediction-section {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #4a90e2;
+        }
+        .prediction-input {
+            width: 100px;
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #4a90e2;
+            border-radius: 5px;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Calculadora Interactiva de Correlación y Regresión</h1>
+        
+        <div class="controls">
+            <button class="btn" onclick="addColumn()">➕ Agregar par de datos</button>
+            <button class="btn" onclick="removeColumn()">➖ Quitar último par</button>
+            <button class="btn" onclick="resetData()">🔄 Restablecer datos originales</button>
+        </div>
+
+        <h2>📋 Datos editables (haz clic para modificar)</h2>
+        <table class="editable-table" id="dataTable">
+            <tr>
+                <th>Horas de estudio (x)</th>
+                <td><input type="number" class="editable-input" value="2" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="3" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="3" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="5" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="6" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="6" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="8" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="8" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="8" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="10" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="11" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="11" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="12" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="12" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="15" onchange="updateCalculations()"></td>
+            </tr>
+            <tr>
+                <th>Calificación (y)</th>
+                <td><input type="number" class="editable-input" value="6" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="8" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="9" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="9" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="10" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="11" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="11" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="10" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="11" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="10" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="12" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="11" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="14" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="14" onchange="updateCalculations()"></td>
+                <td><input type="number" class="editable-input" value="15" onchange="updateCalculations()"></td>
+            </tr>
+        </table>
+
+        <div class="chart-container">
+            <h3>a) Representación gráfica</h3>
+            <canvas id="scatterChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="calculation-steps">
+            <h3>🔢 Cálculos estadísticos</h3>
+            <div id="calculations"></div>
+        </div>
+
+        <div class="results">
+            <h3>📈 Resultados</h3>
+            
+            <div class="result-item">
+                <strong>b) Grado de relación:</strong>
+                <div id="correlation-strength"></div>
+            </div>
+            
+            <div class="result-item">
+                <strong>c) Coeficiente de correlación (r):</strong>
+                <div id="correlation-coefficient"></div>
+            </div>
+            
+            <div class="result-item">
+                <strong>d) Interpretación de la correlación:</strong>
+                <div id="correlation-interpretation"></div>
+            </div>
+            
+            <div class="result-item">
+                <strong>e) Ecuación de regresión:</strong>
+                <div id="regression-equation"></div>
+            </div>
+            
+            <div class="result-item">
+                <strong>f) Valores de la ecuación lineal:</strong>
+                <div id="linear-values"></div>
+            </div>
+        </div>
+
+        <div class="prediction-section">
+            <h3>🎯 Predicción personalizada</h3>
+            <label for="predictionInput"><strong>g) Calcular y para x = </strong></label>
+            <input type="number" id="predictionInput" class="prediction-input" value="20" onchange="updatePrediction()">
+            <div id="prediction-result" style="margin-top: 15px; font-size: 18px;"></div>
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+
+        function getData() {
+            const table = document.getElementById('dataTable');
+            const xInputs = table.rows[0].querySelectorAll('.editable-input');
+            const yInputs = table.rows[1].querySelectorAll('.editable-input');
+            
+            const x = Array.from(xInputs).map(input => parseFloat(input.value) || 0);
+            const y = Array.from(yInputs).map(input => parseFloat(input.value) || 0);
+            
+            return { x, y };
+        }
+
+        function calculateStatistics() {
+            const { x, y } = getData();
+            const n = x.length;
+
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+            const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+            const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+            
+            const meanX = sumX / n;
+            const meanY = sumY / n;
+
+            // Coeficiente de correlación de Pearson
+            const numerator = n * sumXY - sumX * sumY;
+            const denomX = n * sumX2 - sumX * sumX;
+            const denomY = n * sumY2 - sumY * sumY;
+            const denominator = Math.sqrt(denomX * denomY);
+            const r = denominator !== 0 ? numerator / denominator : 0;
+
+            // Coeficientes de regresión
+            const b = denomX !== 0 ? numerator / denomX : 0;
+            const a = meanY - b * meanX;
+
+            return {
+                n, sumX, sumY, sumXY, sumX2, sumY2, meanX, meanY,
+                numerator, denomX, denomY, denominator, r, a, b
+            };
+        }
+
+        function updateCalculations() {
+            const stats = calculateStatistics();
+            const { n, sumX, sumY, sumXY, sumX2, sumY2, meanX, meanY, numerator, denomX, denomY, denominator, r, a, b } = stats;
+
+            // Mostrar cálculos
+            document.getElementById('calculations').innerHTML = `
+                <div class="formula">
+                    <strong>Sumas necesarias:</strong><br>
+                    n = ${n}<br>
+                    Σx = ${sumX}<br>
+                    Σy = ${sumY}<br>
+                    Σxy = ${sumXY}<br>
+                    Σx² = ${sumX2}<br>
+                    Σy² = ${sumY2}<br>
+                    x̄ = ${meanX.toFixed(4)}<br>
+                    ȳ = ${meanY.toFixed(4)}
+                </div>
+                <div class="formula">
+                    <strong>Fórmula del coeficiente de correlación:</strong><br>
+                    r = [n·Σxy - Σx·Σy] / √[(n·Σx² - (Σx)²)(n·Σy² - (Σy)²)]<br>
+                    r = [${n}×${sumXY} - ${sumX}×${sumY}] / √[(${n}×${sumX2} - ${sumX}²)(${n}×${sumY2} - ${sumY}²)]<br>
+                    r = [${numerator}] / √[${denomX} × ${denomY}]<br>
+                    r = ${numerator} / ${denominator.toFixed(2)} = <span class="highlight">${r.toFixed(4)}</span>
+                </div>
+            `;
+
+            // Determinar grado de relación
+            let strengthText = "";
+            if (Math.abs(r) >= 0.9) strengthText = "Muy fuerte";
+            else if (Math.abs(r) >= 0.7) strengthText = "Fuerte";
+            else if (Math.abs(r) >= 0.5) strengthText = "Moderada";
+            else if (Math.abs(r) >= 0.3) strengthText = "Débil";
+            else strengthText = "Muy débil";
+
+            document.getElementById('correlation-strength').innerHTML = `<span class="highlight">${strengthText}</span> (|r| = ${Math.abs(r).toFixed(4)})`;
+            
+            document.getElementById('correlation-coefficient').innerHTML = `<span class="highlight">r = ${r.toFixed(4)}</span>`;
+            
+            const direction = r > 0 ? 'positiva' : r < 0 ? 'negativa' : 'nula';
+            const trend = r > 0 ? 'a mayor valor de x, tiende a haber mayor valor de y' : r < 0 ? 'a mayor valor de x, tiende a haber menor valor de y' : 'no hay tendencia lineal clara';
+            
+            document.getElementById('correlation-interpretation').innerHTML = `
+                Existe una correlación <span class="highlight">${direction} ${strengthText.toLowerCase()}</span> entre las variables.
+                Esto significa que ${trend}.
+            `;
+            
+            document.getElementById('regression-equation').innerHTML = `
+                <div class="formula">
+                    <strong>Cálculo de coeficientes:</strong><br>
+                    b = [n·Σxy - Σx·Σy] / [n·Σx² - (Σx)²]<br>
+                    b = [${n}×${sumXY} - ${sumX}×${sumY}] / [${n}×${sumX2} - ${sumX}²]<br>
+                    b = ${numerator} / ${denomX} = <span class="highlight">${b.toFixed(4)}</span><br><br>
+                    a = ȳ - b·x̄<br>
+                    a = ${meanY.toFixed(4)} - ${b.toFixed(4)}×${meanX.toFixed(4)} = <span class="highlight">${a.toFixed(4)}</span>
+                </div>
+                <strong>Ecuación de regresión:</strong><br>
+                <span class="highlight">y = ${a.toFixed(4)} + ${b.toFixed(4)}x</span>
+            `;
+            
+            document.getElementById('linear-values').innerHTML = `
+                En la ecuación lineal y = a + bx:<br>
+                • <span class="highlight">a = ${a.toFixed(4)}</span> (intercepto)<br>
+                • <span class="highlight">b = ${b.toFixed(4)}</span> (pendiente)
+            `;
+
+            updateChart();
+            updatePrediction();
+        }
+
+        function updatePrediction() {
+            const stats = calculateStatistics();
+            const { a, b } = stats;
+            const xValue = parseFloat(document.getElementById('predictionInput').value) || 0;
+            const prediction = a + b * xValue;
+            
+            document.getElementById('prediction-result').innerHTML = `
+                <div class="formula">
+                    Si x = ${xValue}:<br>
+                    y = ${a.toFixed(4)} + ${b.toFixed(4}}(${xValue})<br>
+                    y = ${a.toFixed(4)} + ${(b * xValue).toFixed(4)}<br>
+                    y = <span class="highlight">${prediction.toFixed(4)}</span>
+                </div>
+                Para x = ${xValue}, se predice y = <span class="highlight">${prediction.toFixed(4)}</span>
+            `;
+        }
+
+        function updateChart() {
+            const { x, y } = getData();
+            const stats = calculateStatistics();
+            const { a, b } = stats;
+            
+            if (x.length === 0 || y.length === 0) return;
+
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            
+            // Generar puntos para la línea de regresión
+            const minX = Math.min(...x);
+            const maxX = Math.max(...x);
+            const regressionLine = [];
+            for (let i = minX; i <= maxX; i += (maxX - minX) / 20) {
+                regressionLine.push({x: i, y: a + b * i});
+            }
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Datos observados',
+                        data: x.map((xi, i) => ({x: xi, y: y[i]})),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        pointRadius: 8,
+                        pointHoverRadius: 10
+                    }, {
+                        label: 'Línea de regresión',
+                        data: regressionLine,
+                        type: 'line',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        pointRadius: 0,
+                        borderWidth: 3,
+                        tension: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Diagrama de Dispersión con Línea de Regresión',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Variable X',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Variable Y',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function addColumn() {
+            const table = document.getElementById('dataTable');
+            const xRow = table.rows[0];
+            const yRow = table.rows[1];
+            
+            const xCell = xRow.insertCell(-1);
+            const yCell = yRow.insertCell(-1);
+            
+            xCell.innerHTML = '<input type="number" class="editable-input" value="0" onchange="updateCalculations()">';
+            yCell.innerHTML = '<input type="number" class="editable-input" value="0" onchange="updateCalculations()">';
+            
+            updateCalculations();
+        }
+
+        function removeColumn() {
+            const table = document.getElementById('dataTable');
+            const xRow = table.rows[0];
+            const yRow = table.rows[1];
+            
+            if (xRow.cells.length > 2) { // Mantener al menos 1 columna de datos + encabezado
+                xRow.deleteCell(-1);
+                yRow.deleteCell(-1);
+                updateCalculations();
+            }
+        }
+
+        function resetData() {
+            const table = document.getElementById('dataTable');
+            const originalX = [2, 3, 3, 5, 6, 6, 8, 8, 8, 10, 11, 11, 12, 12, 15];
+            const originalY = [6, 8, 9, 9, 10, 11, 11, 10, 11, 10, 12, 11, 14, 14, 15];
+            
+            // Limpiar tabla
+            while (table.rows[0].cells.length > 1) {
+                table.rows[0].deleteCell(-1);
+                table.rows[1].deleteCell(-1);
+            }
+            
+            // Agregar datos originales
+            for (let i = 0; i < originalX.length; i++) {
+                const xCell = table.rows[0].insertCell(-1);
+                const yCell = table.rows[1].insertCell(-1);
+                
+                xCell.innerHTML = `<input type="number" class="editable-input" value="${originalX[i]}" onchange="updateCalculations()">`;
+                yCell.innerHTML = `<input type="number" class="editable-input" value="${originalY[i]}" onchange="updateCalculations()">`;
+            }
+            
+            updateCalculations();
+        }
+
+        // Inicializar al cargar la página
+        window.onload = function() {
+            updateCalculations();
+        };
+    </script>
+</body>
+</html>
